@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rise 360 Interactive Learning</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Mon Parcours d'Apprentissage</h1>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress" id="globalProgress"></div>
+                </div>
+                <div class="score">Score: <span id="globalScore">0</span></div>
+            </div>
+        </header>
+
+        <main>
+            <div class="activities-container">
+                <div class="activity" id="flashcards">
+                    <h2>Flashcards</h2>
+                    <iframe src="flashcards.html" frameborder="0"></iframe>
+                </div>
+
+                <div class="activity" id="sorting">
+                    <h2>Activité de Tri</h2>
+                    <iframe src="sorting.html" frameborder="0"></iframe>
+                </div>
+
+                <div class="activity" id="quiz">
+                    <h2>Quiz Final</h2>
+                    <iframe src="quiz.html" frameborder="0"></iframe>
+                </div>
+            </div>
+        </main>
+
+        <div class="controls">
+            <button id="prevActivity" disabled>Précédent</button>
+            <button id="nextActivity">Suivant</button>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html> 

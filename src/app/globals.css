@@ -1,0 +1,386 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-color: #2563eb;
+  --secondary-color: #1e40af;
+  --accent-color: #3b82f6;
+  --text-color: #1f2937;
+  --background-color: #f3f4f6;
+  --card-background: #ffffff;
+  --border-color: #e5e7eb;
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.game-card {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.game-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.game-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.game-card-content {
+  padding: 1.5rem;
+}
+
+.game-card h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #1a1a1a;
+}
+
+.game-card p {
+  color: #666;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.game-card .tags {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.game-card .tag {
+  background: #f0f0f0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.game-card .actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.game-card .button {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: 500;
+  text-align: center;
+  transition: background-color 0.2s ease;
+}
+
+.game-card .button-primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.game-card .button-secondary {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.game-card:hover .button-primary {
+  background: var(--secondary-color);
+}
+
+.game-card:hover .button-secondary {
+  background: #e0e0e0;
+}
+
+.header {
+  background: var(--card-background);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 0;
+  margin-bottom: 2rem;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.header h1 {
+  color: var(--text-color);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.header-nav {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.header-nav a {
+  color: var(--text-color);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+.header-nav a:hover {
+  color: var(--primary-color);
+}
+
+/* Styles pour les jeux */
+.game-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 2rem;
+  background: var(--background-color);
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.game-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.game-content {
+  flex: 1;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  min-height: 800px;
+}
+
+.game-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  min-height: 800px;
+}
+
+.game-progress {
+  margin-top: 1rem;
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+  height: 4px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--primary-color);
+  transition: width 0.3s ease;
+}
+
+/* Styles pour les contrôles de jeu */
+.game-controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.game-button {
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.game-button-primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.game-button-primary:hover {
+  background: var(--secondary-color);
+}
+
+.game-button-secondary {
+  background: #f9fafb;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.game-button-secondary:hover {
+  background: #f3f4f6;
+}
+
+/* Styles pour les messages et notifications */
+.message {
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.message-success {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #10b981;
+}
+
+.message-error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #ef4444;
+}
+
+/* Styles pour les formulaires */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.625rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Styles pour les versions */
+.version-selector {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  background: var(--card-background);
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  z-index: 1000;
+  border: 1px solid var(--border-color);
+}
+
+.version-selector select {
+  padding: 0.375rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: var(--text-color);
+  background: var(--card-background);
+  min-width: 180px;
+}
+
+.edit-button {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+  z-index: 1000;
+}
+
+.edit-button:hover {
+  transform: scale(1.05);
+  background: var(--secondary-color);
+}
+
+.edit-button.active {
+  background: var(--accent-color);
+}
+
+.edit-controls {
+  display: none;
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  background: var(--card-background);
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  z-index: 1000;
+  border: 1px solid var(--border-color);
+}
+
+.edit-controls.visible {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.edit-controls button {
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.edit-controls .cancel-button {
+  background: #ef4444;
+  color: white;
+}
+
+.edit-controls .cancel-button:hover {
+  background: #dc2626;
+}
+
+.edit-controls .save-button {
+  background: #10b981;
+  color: white;
+} 

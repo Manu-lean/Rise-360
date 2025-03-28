@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Final</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+
+        .quiz-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            padding: 10px;
+            background-color: #f8f8f8;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .option:hover {
+            background-color: #e0e0e0;
+        }
+
+        .option.selected {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        .option.correct {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        .option.incorrect {
+            background-color: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+
+        .score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-weight: bold;
+        }
+
+        .submit-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .submit-button:hover {
+            background-color: #45a049;
+        }
+
+        .submit-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .feedback.correct {
+            background-color: #dff0d8;
+            color: #3c763d;
+            display: block;
+        }
+
+        .feedback.incorrect {
+            background-color: #f2dede;
+            color: #a94442;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="score">Score: <span id="score">0</span></div>
+    <div class="quiz-container">
+        <div class="question" id="question"></div>
+        <div class="options" id="options"></div>
+        <div class="feedback" id="feedback"></div>
+        <button class="submit-button" id="submit" disabled>Valider</button>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "Quelle est la capitale de la France ?",
+                options: ["Paris", "Londres", "Berlin", "Madrid"],
+                correct: 0
+            },
+            {
+                question: "Combien font 2 + 2 ?",
+                options: ["3", "4", "5", "6"],
+                correct: 1
+            },
+            {
+                question: "Quelle est la couleur du ciel ?",
+                options: ["Rouge", "Vert", "Bleu", "Jaune"],
+                correct: 2
+            },
+            {
+                question: "Quel est le symbole chimique de l'or ?",
+                options: ["Ag", "Au", "Fe", "Cu"],
+                correct: 1
+            },
+            {
+                question: "Quelle est la planète la plus proche du soleil ?",
+                options: ["Vénus", "Mars", "Mercure", "Terre"],
+                correct: 2
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedOption = null;
+
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const submitButton = document.getElementById('submit');
+        const feedbackElement = document.getElementById('feedback');
+        const scoreElement = document.getElementById('score');
+
+        function displayQuestion() {
+            const question = questions[currentQuestion];
+            questionElement.textContent = question.question;
+            optionsElement.innerHTML = '';
+            selectedOption = null;
+            submitButton.disabled = true;
+            feedbackElement.style.display = 'none';
+
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = option;
+                optionElement.addEventListener('click', () => selectOption(index));
+                optionsElement.appendChild(optionElement);
+            });
+        }
+
+        function selectOption(index) {
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => option.classList.remove('selected'));
+            options[index].classList.add('selected');
+            selectedOption = index;
+            submitButton.disabled = false;
+        }
+
+        function checkAnswer() {
+            const question = questions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            
+            options.forEach(option => option.classList.remove('correct', 'incorrect'));
+            
+            if (selectedOption === question.correct) {
+                options[selectedOption].classList.add('correct');
+                score += 20;
+                feedbackElement.textContent = "Correct !";
+                feedbackElement.className = 'feedback correct';
+            } else {
+                options[selectedOption].classList.add('incorrect');
+                options[question.correct].classList.add('correct');
+                feedbackElement.textContent = "Incorrect. La bonne réponse était : " + question.options[question.correct];
+                feedbackElement.className = 'feedback incorrect';
+            }
+
+            feedbackElement.style.display = 'block';
+            submitButton.disabled = true;
+            scoreElement.textContent = score;
+
+            // Envoyer le score au parent
+            window.parent.postMessage({
+                type: 'score',
+                activity: 'quiz',
+                score: score
+            }, '*');
+
+            setTimeout(() => {
+                if (currentQuestion < questions.length - 1) {
+                    currentQuestion++;
+                    displayQuestion();
+                } else {
+                    // Quiz terminé
+                    questionElement.textContent = "Quiz terminé ! Votre score final : " + score;
+                    optionsElement.innerHTML = '';
+                    submitButton.style.display = 'none';
+                }
+            }, 2000);
+        }
+
+        submitButton.addEventListener('click', checkAnswer);
+        displayQuestion();
+    </script>
+</body>
+</html> 

@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline - Histoire du Web</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            padding: 1rem;
+            height: 100%;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .timeline-container {
+            flex: 1;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            position: relative;
+            overflow-x: auto;
+            overflow-y: hidden;
+            min-width: 300px;
+            width: calc(100% - 2rem);
+            box-sizing: border-box;
+            transition: width 0.1s ease;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #1976D2;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+
+        .resize-handle {
+            position: absolute;
+            right: -4px;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            cursor: ew-resize;
+            background: transparent;
+            z-index: 1000;
+            display: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .resize-handle.min-width {
+            cursor: not-allowed;
+            background: rgba(244, 67, 54, 0.1);
+        }
+
+        .resize-handle.min-width::after {
+            background: #f44336;
+        }
+
+        .resize-handle.min-width:hover {
+            background: rgba(244, 67, 54, 0.2);
+        }
+
+        .resize-handle.max-width {
+            cursor: not-allowed;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .resize-handle.max-width::after {
+            background: #4CAF50;
+        }
+
+        .resize-handle.max-width:hover {
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .timeline-container.min-width {
+            border-color: #f44336;
+        }
+
+        .timeline-container.max-width {
+            border-color: #4CAF50;
+        }
+
+        .edit-mode .resize-handle {
+            display: block;
+        }
+
+        .edit-mode .timeline-container {
+            border: 2px dashed #1976D2;
+        }
+
+        .resize-handle:hover {
+            background: rgba(25, 118, 210, 0.1);
+        }
+
+        .resize-handle::after {
+            content: '';
+            position: absolute;
+            right: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 24px;
+            background: #1976D2;
+            border-radius: 2px;
+        }
+
+        .events {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            padding: 2rem 0;
+            width: 100%;
+            box-sizing: border-box;
+            min-width: 600px;
+        }
+
+        .event {
+            position: relative;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            width: calc(50% - 15px);
+            box-sizing: border-box;
+        }
+
+        .event:hover {
+            transform: translateY(-2px);
+        }
+
+        .event.left {
+            margin-right: auto;
+            margin-left: 0;
+        }
+
+        .event.right {
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        .event::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 30px;
+            height: 2px;
+            background-color: #1976D2;
+        }
+
+        .event.left::before {
+            right: -30px;
+        }
+
+        .event.right::before {
+            left: -30px;
+        }
+
+        @media (min-width: 1200px) {
+            .event {
+                width: calc(50% - 30px);
+                max-width: none;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .event {
+                width: calc(50% - 30px);
+                max-width: 300px;
+            }
+        }
+
+        .event-date {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1976D2;
+            margin-bottom: 0.5rem;
+        }
+
+        .event-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .event-description {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .edit-mode .event {
+            cursor: move;
+        }
+
+        .edit-mode .event::after {
+            content: '↔';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: #1976D2;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .edit-mode .event:hover::after {
+            opacity: 1;
+        }
+
+        .edit-mode .event.left::after {
+            right: -30px;
+        }
+
+        .edit-mode .event.right::after {
+            left: -30px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            padding: 1rem;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .button:first-child {
+            background-color: #1976D2;
+            color: white;
+        }
+
+        .button:first-child:hover {
+            background-color: #1565C0;
+        }
+
+        .button:last-child {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .button:last-child:hover {
+            background-color: #e0e0e0;
+        }
+
+        .button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .score {
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 4px;
+            margin-left: auto;
+        }
+
+        .score.correct {
+            color: #4CAF50;
+        }
+
+        .score.incorrect {
+            color: #f44336;
+        }
+
+        .edit-controls {
+            display: none;
+            gap: 1rem;
+            align-items: center;
+            padding: 1rem;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .edit-mode .edit-controls {
+            display: flex;
+        }
+
+        .edit-mode .game-controls {
+            display: none;
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            padding: 1rem;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .edit-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: #1976D2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin-left: auto;
+        }
+
+        .edit-button:hover {
+            background-color: #1565C0;
+        }
+
+        .edit-button svg {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="timeline-container">
+            <div class="timeline-line"></div>
+            <div id="events" class="events"></div>
+            <div class="resize-handle"></div>
+        </div>
+        <div class="controls game-controls">
+            <button id="checkButton" class="button">Vérifier</button>
+            <button id="resetButton" class="button">Réinitialiser</button>
+            <button class="edit-button" onclick="window.location.href = `/games/timeline/edit?version=${game.versionId}`">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                </svg>
+                Éditer
+            </button>
+            <div id="score" class="score"></div>
+        </div>
+        <div class="controls edit-controls">
+            <button id="saveButton" class="button">Enregistrer</button>
+            <button id="cancelButton" class="button">Annuler</button>
+        </div>
+    </div>
+
+    <script>
+        class TimelineGame {
+            constructor() {
+                this.timeline = document.getElementById('events');
+                this.checkButton = document.getElementById('checkButton');
+                this.resetButton = document.getElementById('resetButton');
+                this.saveButton = document.getElementById('saveButton');
+                this.cancelButton = document.getElementById('cancelButton');
+                this.score = document.getElementById('score');
+                this.events = [];
+                this.sortedEvents = [];
+                this.isChecking = false;
+                this.isEditing = false;
+                this.versionId = new URLSearchParams(window.location.search).get('version');
+                this.editMode = new URLSearchParams(window.location.search).get('edit') === 'true';
+                this.initialWidth = null;
+
+                if (!this.versionId) {
+                    console.error('ID de timeline manquant');
+                    this.score.textContent = 'Erreur: Timeline non trouvée';
+                    return;
+                }
+
+                this.init();
+                if (this.editMode) {
+                    this.setupResize();
+                }
+            }
+
+            async init() {
+                try {
+                    await this.loadEvents();
+                    this.setupEventListeners();
+                    this.render();
+                    if (this.editMode) {
+                        this.enterEditMode();
+                    }
+                } catch (error) {
+                    console.error('Erreur d\'initialisation:', error);
+                    this.score.textContent = 'Erreur de chargement';
+                }
+            }
+
+            async loadEvents() {
+                try {
+                    const response = await fetch(`/api/timeline/${this.versionId}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+
+                    if (!data.data || !data.data.events) {
+                        throw new Error('Format de données invalide');
+                    }
+
+                    this.events = data.data.events;
+                    this.sortedEvents = [...this.events].sort((a, b) => a.date.localeCompare(b.date));
+                    
+                    if (!this.editMode) {
+                        this.events = this.shuffleArray([...this.events]);
+                    }
+
+                    if (data.width) {
+                        const container = document.querySelector('.timeline-container');
+                        container.style.width = `${data.width}px`;
+                        this.initialWidth = data.width;
+                    }
+                } catch (error) {
+                    console.error('Erreur lors du chargement des événements:', error);
+                    throw error;
+                }
+            }
+
+            shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
+            setupResize() {
+                const container = document.querySelector('.timeline-container');
+                const handle = document.querySelector('.resize-handle');
+                let startX, startWidth;
+                const minWidth = 600; // Largeur minimale basée sur la largeur minimale des événements
+
+                handle.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    startX = e.clientX;
+                    startWidth = container.offsetWidth;
+                    document.body.style.cursor = 'ew-resize';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (startX === undefined) return;
+                    
+                    const width = startWidth + (e.clientX - startX);
+                    if (width >= minWidth) {
+                        container.style.width = `${width}px`;
+                        handle.classList.remove('min-width');
+                        container.classList.remove('min-width');
+                    } else {
+                        container.style.width = `${minWidth}px`;
+                        handle.classList.add('min-width');
+                        container.classList.add('min-width');
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    startX = undefined;
+                    document.body.style.cursor = '';
+                    if (container.offsetWidth <= minWidth) {
+                        handle.classList.add('min-width');
+                        container.classList.add('min-width');
+                    }
+                });
+            }
+
+            setupEventListeners() {
+                this.checkButton.addEventListener('click', () => this.checkOrder());
+                this.resetButton.addEventListener('click', () => this.reset());
+                this.saveButton.addEventListener('click', () => this.saveChanges());
+                this.cancelButton.addEventListener('click', () => this.cancelEdit());
+            }
+
+            enterEditMode() {
+                document.body.classList.add('edit-mode');
+                this.isEditing = true;
+                this.render();
+            }
+
+            async saveChanges() {
+                try {
+                    const container = document.querySelector('.timeline-container');
+                    const width = container.offsetWidth;
+
+                    const response = await fetch(`/api/timeline/${this.versionId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ width }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Erreur lors de la sauvegarde');
+                    }
+
+                    window.location.href = `/games/timeline/edit?version=${this.versionId}`;
+                } catch (error) {
+                    console.error('Erreur lors de la sauvegarde:', error);
+                    this.score.textContent = 'Erreur lors de la sauvegarde';
+                    this.score.className = 'score incorrect';
+                }
+            }
+
+            cancelEdit() {
+                if (this.initialWidth) {
+                    const container = document.querySelector('.timeline-container');
+                    container.style.width = `${this.initialWidth}px`;
+                }
+                window.location.href = `/games/timeline/edit?version=${this.versionId}`;
+            }
+
+            render() {
+                this.timeline.innerHTML = '';
+                this.events.forEach((event, index) => {
+                    const eventElement = this.createEventElement(event);
+                    this.timeline.appendChild(eventElement);
+                });
+            }
+
+            createEventElement(event) {
+                const eventElement = document.createElement('div');
+                eventElement.className = `event ${event.position || 'left'}`;
+                eventElement.dataset.id = event.id;
+                eventElement.innerHTML = `
+                    <div class="event-date">${event.date}</div>
+                    <div class="event-title">${event.title}</div>
+                    <div class="event-description">${event.description}</div>
+                `;
+
+                if (this.isEditing) {
+                    eventElement.addEventListener('click', () => {
+                        this.toggleEventPosition(event);
+                    });
+                }
+
+                return eventElement;
+            }
+
+            toggleEventPosition(event) {
+                if (!this.isEditing) return;
+                
+                const newPosition = event.position === 'left' ? 'right' : 'left';
+                event.position = newPosition;
+                
+                // Mettre à jour l'API
+                fetch(`/api/timeline/${this.versionId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        events: this.events
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.render();
+                    } else {
+                        console.error('Erreur lors de la mise à jour de la position:', data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la mise à jour de la position:', error);
+                });
+            }
+
+            checkOrder() {
+                if (this.isChecking) return;
+                this.isChecking = true;
+
+                const currentOrder = Array.from(this.timeline.children).map(
+                    element => element.dataset.id
+                );
+
+                const isCorrect = currentOrder.every(
+                    (id, index) => id === this.sortedEvents[index].id
+                );
+
+                this.score.textContent = isCorrect ? 'Correct !' : 'Incorrect, réessayez !';
+                this.score.className = `score ${isCorrect ? 'correct' : 'incorrect'}`;
+
+                if (isCorrect) {
+                    this.checkButton.disabled = true;
+                }
+
+                this.isChecking = false;
+            }
+
+            reset() {
+                this.events = this.shuffleArray([...this.sortedEvents]);
+                this.render();
+                this.score.textContent = '';
+                this.score.className = 'score';
+                this.checkButton.disabled = false;
+            }
+        }
+
+        new TimelineGame();
+    </script>
+</body>
+</html> 
