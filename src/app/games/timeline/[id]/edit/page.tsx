@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import VersionManager from '@/components/VersionManager';
+import Link from 'next/link';
+import TimelineDisplay from '@/components/TimelineDisplay';
 
 interface TimelineEvent {
   id: string;
@@ -26,6 +28,8 @@ export default function TimelineEditPage({ params }: { params: { id: string } })
   const [versions, setVersions] = useState<Version[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentVersionId, setCurrentVersionId] = useState<number | null>(null);
+  const [timelineName, setTimelineName] = useState<string>('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,15 +40,40 @@ export default function TimelineEditPage({ params }: { params: { id: string } })
           throw new Error('Erreur lors de la récupération de la timeline');
         }
         const timelineData = await timelineResponse.json();
-        setTimeline(timelineData.data.events);
+        setTimeline(timelineData.data.events || []);
+        setTimelineName(timelineData.name || 'Timeline sans nom');
 
-        // Charger les versions
-        const versionsResponse = await fetch('/api/versions?gameType=timeline');
+        // Charger les versions de cette timeline spécifique
+        const versionsResponse = await fetch(`/api/versions?gameType=timeline&timelineId=${params.id}`);
+        if (!versionsResponse.ok) {
+          throw new Error('Erreur lors de la récupération des versions');
+        }
         const versionsData = await versionsResponse.json();
-        setVersions(versionsData.versions);
+        
+        // Vérifier si versions existe et est un tableau
+        if (!versionsData.versions || !Array.isArray(versionsData.versions)) {
+          console.log('Aucune version trouvée');
+          setVersions([]);
+        } else {
+          // Filtrer les versions pour ne garder que celles de cette timeline
+          const timelineVersions = versionsData.versions.filter((version: any) => 
+            version.timeline_id === parseInt(params.id)
+          );
+          
+          // S'assurer que chaque version a la bonne structure
+          const formattedVersions = timelineVersions.map((version: any) => ({
+            ...version,
+            data: {
+              events: version.data?.events || []
+            }
+          }));
+          console.log('Versions formatées:', formattedVersions);
+          setVersions(formattedVersions);
+        }
         
         setLoading(false);
       } catch (err) {
+        console.error('Erreur détaillée:', err);
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
         setLoading(false);
       }
@@ -100,10 +129,19 @@ export default function TimelineEditPage({ params }: { params: { id: string } })
         throw new Error('Erreur lors du chargement de la version');
       }
       const data = await response.json();
-      setTimeline(data.data.events);
+      setTimeline(data.data?.events || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
     }
+  };
+
+  const handleVersionChange = (versionId: number) => {
+    setCurrentVersionId(versionId);
+    handleLoadVersion(versionId);
+  };
+
+  const handleEventsChange = (newEvents: TimelineEvent[]) => {
+    setTimeline(newEvents);
   };
 
   if (loading) {
@@ -123,54 +161,48 @@ export default function TimelineEditPage({ params }: { params: { id: string } })
   }
 
   return (
-    <div className="game-container">
-      <h1 className="game-title">Éditer la Timeline</h1>
-
-      <div className="game-controls mb-8">
-        <button 
-          className="game-button game-button-secondary" 
-          onClick={() => router.push(`/games/timeline/${params.id}`)}
-        >
-          Retour aux détails
-        </button>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Éditer la timeline</h1>
+        <Link href={`/games/timeline/${params.id}`} className="game-button game-button-secondary">
+          Voir la timeline
+        </Link>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
-        <h2 className="text-xl font-semibold mb-4">Versions disponibles</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {versions.map((version) => (
-            <div key={version.id} className="border p-4 rounded">
-              <h3 className="font-medium">{version.name}</h3>
-              <p className="text-sm text-gray-600 mb-2">
-                Créée le {new Date(version.created_at).toLocaleDateString()}
-              </p>
-              <p className="text-sm text-gray-600 mb-4">
-                {version.data.events.length} événements
-              </p>
-              <div className="flex gap-2">
-                <button
-                  className="game-button game-button-primary"
-                  onClick={() => handleLoadVersion(version.id)}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4">{timelineName}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="version-selector">
+                <select
+                  value={currentVersionId || ''}
+                  onChange={(e) => handleVersionChange(Number(e.target.value))}
+                  className="form-select"
                 >
-                  Charger
-                </button>
-                <button
-                  className="game-button game-button-danger"
-                  onClick={() => handleDeleteVersion(version.id)}
-                >
-                  Supprimer
-                </button>
+                  {versions.map((version) => (
+                    <option key={version.id} value={version.id}>
+                      Version du {new Date(version.created_at).toLocaleDateString()} ({version.data.events.length} événements)
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
-          ))}
+          </div>
+          <VersionManager
+            timelineId={Number(params.id)}
+            onSave={handleSave}
+            onEventsChange={handleEventsChange}
+          />
+        </div>
+
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4">Aperçu</h2>
+            <TimelineDisplay events={timeline} />
+          </div>
         </div>
       </div>
-
-      <VersionManager
-        events={timeline}
-        onSave={handleSave}
-        onCancel={() => router.push(`/games/timeline/${params.id}`)}
-      />
     </div>
   );
 } 

@@ -4,24 +4,28 @@ import { run } from '@/lib/db';
 const timelines = [
   {
     name: "Histoire de l'Internet",
+    description: "Explorez l'histoire d'Internet à travers les événements clés",
     events: [
       {
         id: "1",
         date: "1969",
         title: "Création d'ARPANET",
-        description: "Le premier réseau de communication entre ordinateurs est créé par le département de la défense américaine."
+        description: "Le premier réseau de communication entre ordinateurs est créé par le département de la défense américaine.",
+        position: "left"
       },
       {
         id: "2",
         date: "1971",
         title: "Premier email",
-        description: "Ray Tomlinson envoie le premier email et invente le symbole @ pour séparer le nom d'utilisateur du nom de domaine."
+        description: "Ray Tomlinson envoie le premier email et invente le symbole @ pour séparer le nom d'utilisateur du nom de domaine.",
+        position: "right"
       },
       {
         id: "3",
         date: "1983",
         title: "TCP/IP",
-        description: "Adoption du protocole TCP/IP comme standard pour ARPANET."
+        description: "Adoption du protocole TCP/IP comme standard pour ARPANET.",
+        position: "left"
       }
     ]
   },
@@ -62,30 +66,35 @@ const timelines = [
   },
   {
     name: "Histoire des réseaux sociaux",
+    description: "Découvrez l'évolution des réseaux sociaux depuis leur création",
     events: [
       {
         id: "1",
         date: "2004",
         title: "Facebook",
-        description: "Mark Zuckerberg lance Facebook à Harvard."
+        description: "Mark Zuckerberg lance Facebook à Harvard.",
+        position: "left"
       },
       {
         id: "2",
         date: "2006",
         title: "Twitter",
-        description: "Jack Dorsey crée Twitter, permettant de partager des messages courts."
+        description: "Jack Dorsey crée Twitter, permettant de partager des messages courts.",
+        position: "right"
       },
       {
         id: "3",
         date: "2010",
         title: "Instagram",
-        description: "Kevin Systrom lance Instagram, une application de partage de photos."
+        description: "Kevin Systrom lance Instagram, une application de partage de photos.",
+        position: "left"
       },
       {
         id: "4",
         date: "2016",
         title: "TikTok",
-        description: "ByteDance lance TikTok, révolutionnant le partage de vidéos courtes."
+        description: "ByteDance lance TikTok, révolutionnant le partage de vidéos courtes.",
+        position: "right"
       }
     ]
   },

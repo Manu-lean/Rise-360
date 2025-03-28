@@ -39,26 +39,45 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { width } = await request.json();
+    const { events } = await request.json();
     
-    if (typeof width !== 'number') {
+    if (!Array.isArray(events)) {
       return NextResponse.json(
-        { error: 'La largeur doit être un nombre' },
+        { error: 'Les événements doivent être un tableau' },
         { status: 400 }
       );
     }
 
+    // Récupérer la timeline existante
+    const timeline = await get(`
+      SELECT * FROM game_versions 
+      WHERE id = ? AND game_type = 'timeline'
+    `, [params.id]);
+
+    if (!timeline) {
+      return NextResponse.json(
+        { error: 'Timeline non trouvée' },
+        { status: 404 }
+      );
+    }
+
+    // Mettre à jour les événements
+    const updatedData = {
+      ...JSON.parse(timeline.data),
+      events
+    };
+
     await run(`
       UPDATE game_versions 
-      SET width = ? 
+      SET data = ? 
       WHERE id = ? AND game_type = 'timeline'
-    `, [width, params.id]);
+    `, [JSON.stringify(updatedData), params.id]);
 
-    return NextResponse.json({ message: 'Largeur mise à jour avec succès' });
+    return NextResponse.json({ message: 'Timeline mise à jour avec succès' });
   } catch (error) {
-    console.error('Erreur lors de la mise à jour de la largeur:', error);
+    console.error('Erreur lors de la mise à jour de la timeline:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la mise à jour de la largeur' },
+      { error: 'Erreur lors de la mise à jour de la timeline' },
       { status: 500 }
     );
   }
